@@ -1,3 +1,5 @@
+# Source https://github.com/hughfdjackson/fluorescent-fibre-counting.git
+
 from normalized import DensityMapNormalizer, ImageNormalizer
 from generate import generate_training_example, Config
 

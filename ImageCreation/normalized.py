@@ -1,3 +1,5 @@
+# Source https://github.com/hughfdjackson/fluorescent-fibre-counting.git
+
 import generate as gen
 from random import seed
 

@@ -1,3 +1,5 @@
+# Source https://github.com/hughfdjackson/fluorescent-fibre-counting.git
+
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 
 from random import random
@@ -403,7 +405,7 @@ def create_fibre_image(components, config):
 
     
     # DOS Addition 
-    eventid = datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4())
+    # eventid = datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4())
 
 
 
@@ -412,8 +414,8 @@ def create_fibre_image(components, config):
     for component in components:
         image = component.draw(image)
 
-    image.convert('L').save(eventid+"xxx.png","PNG")
-    image.convert('P').save(eventid+".png","PNG")
+    # image.convert('L').save(eventid+"xxx.png","PNG")
+    # image.convert('P').save(eventid+".png","PNG")
 
     return image.convert('L')
 
