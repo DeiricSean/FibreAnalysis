@@ -159,7 +159,8 @@ class Fibre(Component):
 
         return Fibre({
             'path': path,
-            'color': _generate_colors(length, (125, 200), (150, 255)),
+            #'color': _generate_colors(length, (125, 200), (150, 255)),
+            'color': _generate_colors(length, (0, 50), (25, 75)),
             'width': width,
             'bubble': FibreBubble.generate(path, width),
             'length': length,
@@ -241,7 +242,8 @@ class Background(Component):
     def generate(config):
         np.random.seed(_pick_natural(maximum = 324230432))
         return Background({
-            'color': _color(_pick_natural(0, 50)),
+            #'color': _color(_pick_natural(0, 50)),
+            'color': _color(_pick_natural(200, 255)),  # Set background to white
             'bounding_box': [(0, 0), config.image_dims],
             'noise_degree': _pick_float(0, 5),
             'noise_shift': (_pick_natural(0, 100), _pick_natural(0, 100)),
@@ -289,7 +291,8 @@ class TapeLine(Component):
             np.linspace(start[1], end[1], num_segments),
         ))
 
-        colors = _generate_colors(num_segments, (50, 150), (50, 50))
+        # colors = _generate_colors(num_segments, (50, 150), (50, 50))
+        colors = _generate_colors(num_segments, (0, 50), (50, 50))
 
         return TapeLine({
             'path': path,

@@ -16,39 +16,32 @@ import numpy as np
 import math
 
 
-
-def test_generation_is_deterministic():
+def test_generation_is_deterministic(image_destination, mask_destination):
     test_seed = 120
 
     seed(test_seed)
     data1, label1, count1 = training_set(10, Config())
 
- #   seed(test_seed)
- #   data2, label2, count2 = training_set(10, Config())
+    for i, (image, mask) in enumerate(zip(data1, label1), 1):
+        
+        #Image.fromarray(image.squeeze(), mode="L").save(f"image{i}.png")
+        Image.fromarray(image.squeeze(), mode="L").save(f"{image_destination}image{i}.png")
+        Image.fromarray(mask.squeeze(), mode="L").save(f"{mask_destination}mask{i}.png")
+       
 
- #   np.array_equal(data1, data2)
- #   np.array_equal(label1, label2)
- #   np.array_equal(count1, count2)
+# Check if it contains a mask 
 
+    # # Load the mask image
+    # mask_image = Image.open("image_mask.png")
 
-# Create a PIL Image object
-    image = Image.fromarray(data1[0].squeeze(), mode="L")
+    # # Convert the image to a NumPy array
+    # mask_array = np.array(mask_image)
 
-# Save the image
-    image.save("image_1.png")  # Save the image as PNG file
+    # # Check if any non-zero pixel values exist
+    # contains_mask = np.any(mask_array != 0)
 
-    image2 = Image.fromarray(label1[0].squeeze(), mode="L")
-
-# Save the image
-    image2.save("image_mask.png")  # Save the image as PNG file
-
-
-
-    # # Reshape the array to 2D
-    # mask_array_2d = label1[0].squeeze()
-
-    # # Create a PIL Image object
-    # mask_image = Image.fromarray(mask_array_2d * 255, mode="L")
-
-    # # Save the mask as a PNG file
-    # mask_image.save("mask.png")  # Save the mask as a PNG file
+    # # Print the result
+    # if contains_mask:
+    #     print("The mask image contains a mask.")
+    # else:
+    #     print("The mask image does not contain a mask.")
