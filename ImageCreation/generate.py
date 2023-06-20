@@ -402,22 +402,34 @@ def gen_components(config):
 
 def create_fibre_image(components, config):
     image = Image.new('RGB', config.image_dims)
-
-    
     # DOS Addition 
     # eventid = datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4())
-
-
-
-    
     
     for component in components:
+        # print(component)
         image = component.draw(image)
-
+        
+        # if isinstance(component, Fibre):
+        #     print('fibre')
+        # else:
+        # # Code to execute when the component does not match any expected class
+        #     print("Component does not match any expected class")
+        
+        
     # image.convert('L').save(eventid+"xxx.png","PNG")
     # image.convert('P').save(eventid+".png","PNG")
 
     return image.convert('L')
+
+def create_fibre_mask(components, config):
+    
+    
+    image_mask = Image.new('RGB', config.image_dims)
+    for component in components:
+        if isinstance(component, Fibre):
+            image_mask = component.draw(image_mask)
+
+    return image_mask.convert('L')
 
 def create_density_map(components, config):
     w, h = config.image_dims
@@ -431,10 +443,13 @@ def create_density_map(components, config):
 def render_components(components, config):
     w, h = config.image_dims
     image = np.asarray(create_fibre_image(components, config)).reshape(h, w, 1)
-    density_map = np.asarray(create_density_map(components, config)).reshape(h, w, 1)
-    count = np.sum(density_map) / 2.
+    image_mask = np.asarray(create_fibre_mask(components, config)).reshape(h, w, 1)
+    
+    # density_map = np.asarray(create_density_map(components, config)).reshape(h, w, 1)
+    #count = np.sum(density_map) / 2.
+    count = 1
 
-    return (image, density_map, count)
+    return (image, image_mask, count)
 
 def render_components_set(components_set, config):
     with Pool() as p:

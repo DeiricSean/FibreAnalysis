@@ -35,14 +35,20 @@ def test_generation_is_deterministic():
     image = Image.fromarray(data1[0].squeeze(), mode="L")
 
 # Save the image
-    image.save("image  test test .png")  # Save the image as PNG file
+    image.save("image_1.png")  # Save the image as PNG file
+
+    image2 = Image.fromarray(label1[0].squeeze(), mode="L")
+
+# Save the image
+    image2.save("image_mask.png")  # Save the image as PNG file
 
 
-    # Reshape the array to 2D
-    mask_array_2d = label1[0].squeeze()
 
-    # Create a PIL Image object
-    mask_image = Image.fromarray(mask_array_2d * 255, mode="L")
+    # # Reshape the array to 2D
+    # mask_array_2d = label1[0].squeeze()
 
-    # Save the mask as a PNG file
-    mask_image.save("mask.png")  # Save the mask as a PNG file
+    # # Create a PIL Image object
+    # mask_image = Image.fromarray(mask_array_2d * 255, mode="L")
+
+    # # Save the mask as a PNG file
+    # mask_image.save("mask.png")  # Save the mask as a PNG file
