@@ -1,7 +1,15 @@
 # https://github.com/computervisioneng/image-segmentation-yolov8
 
 from ultralytics import YOLO
+import os
 
 model = YOLO('yolov8n-seg.pt')  # load a pretrained model (recommended for training)
 
-model.train(data='config.yaml', epochs=1, imgsz=640)
+
+current_directory = os.getcwd()
+print(current_directory)
+
+script_directory = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_directory, 'config.yaml')
+print(config_path)
+model.train(data=config_path, epochs=1, imgsz=640)

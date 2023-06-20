@@ -10,9 +10,10 @@ if __name__ == '__main__':
     #current_directory = os.path.dirname(os.path.abspath(__file__))
     sample_images = os.path.join(current_directory, 'Data', 'Yolo', 'images', '')
     sample_masks = os.path.join(current_directory, 'Data', 'Yolo', 'masks', '')
+    sample_labels = os.path.join(current_directory, 'Data', 'Yolo', 'labels', '')
     print(sample_masks)
     print(sample_images)
     
     print("is this working?")
-    test_generation_is_deterministic(sample_images , sample_masks )
+    test_generation_is_deterministic(sample_images , sample_masks , sample_labels)
     print("perhaps")

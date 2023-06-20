@@ -1,6 +1,6 @@
-path: /home/phillip/Desktop/todays_tutorial/41_image_segmentation_yolov8/code/data
-train: images/train 
-val: images/val  
+path: C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\Yolo
+train: images\train 
+val: images\val  
 
 nc: 1
-names: ['duck']
+names: ['fibre']
