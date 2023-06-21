@@ -365,7 +365,7 @@ class Config:
            
            max_fibres = 40, min_fibres = 1,
            max_fibre_width = 3, min_fibre_width = 1,
-           max_fibre_length = 125, min_fibre_length = 20,
+           max_fibre_length = 325, min_fibre_length = 20,
            max_background_fibres = 1, min_background_fibres = 0,
            min_curvature_sigma = .00, max_curvature_sigma = .25,
            min_curvature_limit = .025, max_curvature_limit = .15

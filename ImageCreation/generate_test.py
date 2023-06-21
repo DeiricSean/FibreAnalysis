@@ -17,12 +17,10 @@ from generate import (
 import numpy as np
 import math
 
-def get_contours( inboundMask ):
 
-#for j in os.listdir(input_dir):
-#    image_path = os.path.join(input_dir, j)
-    # load the binary mask and get its contours
-#    mask = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+# get_contours and store_polygons taken from  https://github.com/computervisioneng/image-segmentation-yolov8
+# used to convert masks into YOLO suitable labels
+def get_contours( inboundMask ):
 
     _, mask = cv2.threshold(inboundMask, 1, 255, cv2.THRESH_BINARY)
 
@@ -45,7 +43,6 @@ def get_contours( inboundMask ):
 
 def store_polygons(directory, file,  inboundPolygons):
     # print the polygons
-#    with open('{}.txt'.format(os.path.join(output_dir, j)[:-4]), 'w') as f:
     with open('{}.txt'.format(os.path.join(directory, file)[:-4]), 'w') as f:
         for polygon in inboundPolygons:
             for p_, p in enumerate(polygon):
@@ -68,25 +65,9 @@ def test_generation_is_deterministic(image_destination, mask_destination, label_
 
     for i, (image, mask) in enumerate(zip(data1, label1), 1):
         current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
-        #Image.fromarray(image.squeeze(), mode="L").save(f"image{i}.png")
         Image.fromarray(image.squeeze(), mode="L").save(f"{image_destination}image_{current_time}.png")
-        #Image.fromarray(mask.squeeze(), mode="L").save(f"{mask_destination}mask_{current_time}.png")
+        #Image.fromarray(image.squeeze(), mode="P").save(f"{image_destination}image_{current_time}.png")        
         Image.fromarray(mask.squeeze(), mode="P").save(f"{mask_destination}mask_{current_time}.png")
         store_polygons(label_destination, f"label_{current_time}.txt",  get_contours(mask))
 
-# Check if it contains a mask 
 
-    # # Load the mask image
-    # mask_image = Image.open("image_mask.png")
-
-    # # Convert the image to a NumPy array
-    # mask_array = np.array(mask_image)
-
-    # # Check if any non-zero pixel values exist
-    # contains_mask = np.any(mask_array != 0)
-
-    # # Print the result
-    # if contains_mask:
-    #     print("The mask image contains a mask.")
-    # else:
-    #     print("The mask image does not contain a mask.")

@@ -8,9 +8,9 @@ if __name__ == '__main__':
     current_directory = os.getcwd()
     print(current_directory)
     #current_directory = os.path.dirname(os.path.abspath(__file__))
-    sample_images = os.path.join(current_directory, 'Data', 'Yolo', 'images', '')
-    sample_masks = os.path.join(current_directory, 'Data', 'Yolo', 'masks', '')
-    sample_labels = os.path.join(current_directory, 'Data', 'Yolo', 'labels', '')
+    sample_images = os.path.join(current_directory, 'Data', 'synth', 'images', '')
+    sample_masks = os.path.join(current_directory, 'Data', 'synth', 'masks', '')
+    sample_labels = os.path.join(current_directory, 'Data', 'synth', 'labels', '')
     print(sample_masks)
     print(sample_images)
     
