@@ -70,7 +70,8 @@ def test_generation_is_deterministic(image_destination, mask_destination, label_
         current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
         #Image.fromarray(image.squeeze(), mode="L").save(f"image{i}.png")
         Image.fromarray(image.squeeze(), mode="L").save(f"{image_destination}image_{current_time}.png")
-        Image.fromarray(mask.squeeze(), mode="L").save(f"{mask_destination}mask_{current_time}.png")
+        #Image.fromarray(mask.squeeze(), mode="L").save(f"{mask_destination}mask_{current_time}.png")
+        Image.fromarray(mask.squeeze(), mode="P").save(f"{mask_destination}mask_{current_time}.png")
         store_polygons(label_destination, f"label_{current_time}.txt",  get_contours(mask))
 
 # Check if it contains a mask 

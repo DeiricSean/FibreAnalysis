@@ -1,7 +1,7 @@
 # Source https://github.com/hughfdjackson/fluorescent-fibre-counting.git
 
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
-
+from random import randint
 from random import random
 from math import floor, pi, cos, sin, tanh, sqrt
 
@@ -129,7 +129,7 @@ def _generate_colors(length, color_range, alpha_range):
 def _color(i, alpha = 255):
     return (i, i, i, alpha)
 
-def _draw_fibre(state, image):
+def _draw_fibre(state, image, isMask=False):
     image = state['bubble'].draw(image)
     path = state['path']
 
@@ -137,14 +137,33 @@ def _draw_fibre(state, image):
 
     segments = zip(path[:-1], path[1:])
 
-    for segment, color in zip(segments, state['color']):
-        draw.line(
-            segment,
-            fill = color,
-            width = state['width']
-        )
+    if isMask == False:
+        for segment, color in zip(segments, state['color']):
+            draw.line(
+                segment,
+                fill = color,
+                width = state['width']
+            )
+    else:
+        color = generate_random_color()
+        for segment in segments:
+            draw.line(
+                segment,
+                fill = color,
+                width = state['width']
+            )
+                
 
     return image
+
+def generate_random_color():
+    red = randint(0, 253)
+    green = randint(0, 253)
+    blue = randint(0, 253)
+    alpha = 255
+    return (red, green, blue, alpha)
+
+
 
 def _vector(angle, length):
     return (cos(angle) * length, sin(angle) * length)
@@ -160,15 +179,15 @@ class Fibre(Component):
         return Fibre({
             'path': path,
             #'color': _generate_colors(length, (125, 200), (150, 255)),
-            'color': _generate_colors(length, (0, 50), (25, 75)),
+            'color': _generate_colors(length, (0, 10), (150, 255)),
             'width': width,
             'bubble': FibreBubble.generate(path, width),
             'length': length,
             'image_dims': config.image_dims
         })
 
-    def draw(self, image):
-        return _draw_fibre(self.state, image)
+    def draw(self, image, isMask=False):
+        return _draw_fibre(self.state, image, isMask)
 
     def update_density_map(self, array):
         def point_to_int(point):
@@ -209,8 +228,8 @@ class NonFluorescentFibre(Component):
             'bubble': FibreBubble.generate(path, width)
         })
 
-    def draw(self, image):
-        return _draw_fibre(self.state, image)
+    def draw(self, image, isMask=False):
+        return _draw_fibre(self.state, image, isMask)
 
 class FibreBubble(Component):
 
@@ -430,7 +449,7 @@ def create_fibre_mask(components, config):
     image_mask = Image.new('RGB', config.image_dims)
     for component in components:
         if isinstance(component, Fibre):
-            image_mask = component.draw(image_mask)
+            image_mask = component.draw(image_mask, True)
 
     return image_mask.convert('L')
 
