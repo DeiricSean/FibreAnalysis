@@ -3,3 +3,5 @@
 /Fibres1
 /runs
 yolov8n-seg.pt
+/ImageCreation/detection
+/ImageCreation/tmp

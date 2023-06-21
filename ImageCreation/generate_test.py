@@ -32,13 +32,13 @@ def get_contours( inboundMask ):
     # convert the contours to polygons
     polygons = []
     for cnt in contours:
-        if cv2.contourArea(cnt) > 200:
-            polygon = []
-            for point in cnt:
-                x, y = point[0]
-                polygon.append(x / W)
-                polygon.append(y / H)
-            polygons.append(polygon)
+       # if cv2.contourArea(cnt) > 200:
+        polygon = []
+        for point in cnt:
+            x, y = point[0]
+            polygon.append(x / W)
+            polygon.append(y / H)
+        polygons.append(polygon)
     
     return polygons
 

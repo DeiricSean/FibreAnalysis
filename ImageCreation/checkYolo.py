@@ -1,17 +1,10 @@
-import cv2
+
 import numpy as np
-# current_directory = os.getcwd()
-# print(current_directory)
-#   #current_directory = os.path.dirname(os.path.abspath(__file__))
-# input_dir = os.path.join(current_directory, 'ImageCreation', 'tmp', 'masks', '')
-# output_dir = os.path.join(current_directory, 'ImageCreation', 'tmp', 'labels', '')
+
 
 import os
 import cv2
 
-
-# input_dir = '.\tmp\masks'
-# output_dir = '.\tmp\labels'
 
 current_directory = os.getcwd()
 print(current_directory)
