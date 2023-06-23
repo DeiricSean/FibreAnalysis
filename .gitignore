@@ -5,7 +5,6 @@
 yolov8n-seg.pt
 /ImageCreation/detection
 /ImageCreation/tmp
-/ImageCreation/_pycache_
-ImageCreation/__pycache__/generate.cpython-39.pyc
-ImageCreation/__pycache__/generate.cpython-39.pyc
-ImageCreation/__pycache__/generate_test.cpython-39.pyc
+/ImageCreation/__pycache__
+ImageCreation/__pycache__
+

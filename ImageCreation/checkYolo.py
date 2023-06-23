@@ -10,8 +10,8 @@ label_images = os.path.join(current_directory, 'Data', 'synth', 'labels', '')
 
 
 
-image_path = os.path.join(sample_images, "image_2023-06-21_21-01-00-821663.png")
-label_path = os.path.join(label_images, "label_2023-06-21_21-01-00-821663.txt")
+image_path = os.path.join(sample_images, "image_2023-06-22_20-26-39-590405.png")
+label_path = os.path.join(label_images, "label_2023-06-22_20-26-39-590405.txt")
 
 # Load the original image and YOLO format label
 image = cv2.imread(image_path)

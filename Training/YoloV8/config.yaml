@@ -1,4 +1,4 @@
-path: C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\Yolo
+path: C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\synth
 train: images\train 
 val: images\val  
 

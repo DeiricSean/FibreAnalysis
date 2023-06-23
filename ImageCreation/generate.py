@@ -94,12 +94,19 @@ def _apply_end_colour_penality(i, length, color, alpha_range, amount):
 
     return color[:3] + (alpha,)
 
+def _generate_fibre_colors(length, color_range, alpha_range):
+# Trial of generating solid black lines for fibres
+    colors = [(0, 0, 0, 255)] * (length + 1)  # Generates a list of black color tuples
+    return colors
+
+
 def _generate_colors(length, color_range, alpha_range):
     np.random.seed(_pick_natural(maximum = 1000))
 
     alpha = _pick_natural(*alpha_range)
 
-    color_bound_1 = _pick_natural(*color_range)
+#    color_bound_1 = _pick_natural(*color_range)
+    color_bound_1 = _pick_natural(*color_range[:3])  # Use only RGB values
     color_bound_2 = np.clip(
         int(np.random.normal(loc = color_bound_1, scale = 200)),
         *color_range
@@ -115,6 +122,8 @@ def _generate_colors(length, color_range, alpha_range):
     color = _pick_natural(*color_bounds)
 
     color_with_penalty = _apply_end_colour_penality(0, length, _color(color, alpha), alpha_range, penalty_amount)
+    
+    
     colors = [color_with_penalty]
     rate_of_color_change = _clip_color_change_rate(_pick_natural(-50, 50))
 
@@ -179,7 +188,7 @@ class Fibre(Component):
         return Fibre({
             'path': path,
             #'color': _generate_colors(length, (125, 200), (150, 255)),
-            'color': _generate_colors(length, (0, 10), (150, 255)),
+            'color': _generate_fibre_colors(length, (0, 0), (255, 255)),
             'width': width,
             'bubble': FibreBubble.generate(path, width),
             'length': length,
@@ -223,7 +232,8 @@ class NonFluorescentFibre(Component):
 
         return NonFluorescentFibre({
             'path': path,
-            'color': _generate_colors(length, (0, 50), (0, 50)),
+            #'color': _generate_colors(length, (0, 0), (255, 255)),
+            'color': _generate_fibre_colors(length, (0, 0), (255, 255)),
             'width': width,
             'bubble': FibreBubble.generate(path, width)
         })
@@ -363,9 +373,10 @@ class Config:
            #image_dims = (64, 64),
            image_dims = (1064, 1064),
            
-           max_fibres = 40, min_fibres = 1,
+           #max_fibres = 10, min_fibres = 1,
+           max_fibres = 1, min_fibres = 1,
            max_fibre_width = 3, min_fibre_width = 1,
-           max_fibre_length = 325, min_fibre_length = 20,
+           max_fibre_length = 325, min_fibre_length = 50,
            max_background_fibres = 1, min_background_fibres = 0,
            min_curvature_sigma = .00, max_curvature_sigma = .25,
            min_curvature_limit = .025, max_curvature_limit = .15
@@ -402,18 +413,20 @@ def clip_within_border(point, config):
     return np.clip(x, 5, w), np.clip(y, 5, h)
 
 def pick_fibre_number(config):
-    return _pick_natural(config.min_fibres, config.max_fibres + 1)
+    #return _pick_natural(config.min_fibres, config.max_fibres + 1)
+    return 1  # for initial tests, I'll have one fibre on each image
 
 
 def gen_components(config):
     num_fibres = pick_fibre_number(config)
-    num_background_fibres = _pick_natural(config.min_background_fibres, config.max_background_fibres)
+    #num_background_fibres = _pick_natural(config.min_background_fibres, config.max_background_fibres)
 
     background = Background.generate(config)
 
     fluorescent_fibres = [Fibre.generate(config) for i in range(num_fibres)]
-    background_fibres = [NonFluorescentFibre.generate(config) for i in range(num_background_fibres)]
-    fibres = (fluorescent_fibres + background_fibres)
+    #background_fibres = [NonFluorescentFibre.generate(config) for i in range(num_background_fibres)]
+    #fibres = (fluorescent_fibres + background_fibres)
+    fibres = fluorescent_fibres 
     fibres.sort(key = lambda x: random())
     tape_line = TapeLine.generate(config)
 
