@@ -374,7 +374,7 @@ class Config:
            image_dims = (1064, 1064),
            
            #max_fibres = 10, min_fibres = 1,
-           max_fibres = 1, min_fibres = 1,
+           max_fibres = 5, min_fibres = 1,
            max_fibre_width = 3, min_fibre_width = 1,
            max_fibre_length = 325, min_fibre_length = 50,
            max_background_fibres = 1, min_background_fibres = 0,
@@ -413,8 +413,8 @@ def clip_within_border(point, config):
     return np.clip(x, 5, w), np.clip(y, 5, h)
 
 def pick_fibre_number(config):
-    #return _pick_natural(config.min_fibres, config.max_fibres + 1)
-    return 1  # for initial tests, I'll have one fibre on each image
+    return _pick_natural(config.min_fibres, config.max_fibres + 1)
+    #return 1  # for initial tests, I'll have one fibre on each image
 
 
 def gen_components(config):

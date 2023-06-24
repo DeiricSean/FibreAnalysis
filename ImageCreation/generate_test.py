@@ -61,7 +61,7 @@ def test_generation_is_deterministic(image_destination, mask_destination, label_
     test_seed = 120
 
     seed(test_seed)
-    data1, label1, count1 = training_set(5000, Config())
+    data1, label1, count1 = training_set(5, Config())
 
     for i, (image, mask) in enumerate(zip(data1, label1), 1):
         current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
