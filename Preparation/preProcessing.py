@@ -2,6 +2,16 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+#####################################################
+
+
+
+#### have a look at adaptive thresholding 
+
+
+###########################################
+
+
 class imagePreparation:
     
     def __init__(self, image) -> None:
