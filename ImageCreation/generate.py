@@ -41,8 +41,11 @@ def _generate_point(config, point, angle, rate_of_angle_change, curvature_sigma,
     np.random.seed(_pick_natural(maximum = 1000))
 
     angle += rate_of_angle_change
-    rate_of_angle_change += np.random.normal(loc = 0, scale = curvature_sigma)
+    #rate_of_angle_change += np.random.normal(loc = 0, scale = curvature_sigma)
+    rate_of_angle_change = np.random.normal(loc = 0, scale = curvature_sigma)
+    
     rate_of_angle_change = np.clip(rate_of_angle_change, -pi * curvature_limit, pi * curvature_limit)
+    
 
     vector = _vector(angle, 1)
     new_point = (point[0] + vector[0], point[1] + vector[1])
@@ -187,8 +190,8 @@ class Fibre(Component):
 
         return Fibre({
             'path': path,
-            #'color': _generate_colors(length, (125, 200), (150, 255)),
-            'color': _generate_fibre_colors(length, (0, 0), (255, 255)),
+            'color': _generate_colors(length, (125, 200), (150, 255)),
+            #'color': _generate_fibre_colors(length, (0, 0), (255, 255)),
             'width': width,
             'bubble': FibreBubble.generate(path, width),
             'length': length,
@@ -232,8 +235,8 @@ class NonFluorescentFibre(Component):
 
         return NonFluorescentFibre({
             'path': path,
-            #'color': _generate_colors(length, (0, 0), (255, 255)),
-            'color': _generate_fibre_colors(length, (0, 0), (255, 255)),
+            'color': _generate_colors(length, (0, 0), (255, 255)),
+            #'color': _generate_fibre_colors(length, (0, 0), (255, 255)),
             'width': width,
             'bubble': FibreBubble.generate(path, width)
         })
@@ -374,11 +377,11 @@ class Config:
            image_dims = (1064, 1064),
            
            #max_fibres = 10, min_fibres = 1,
-           max_fibres = 5, min_fibres = 1,
+           max_fibres = 20, min_fibres = 1,
            max_fibre_width = 3, min_fibre_width = 1,
-           max_fibre_length = 325, min_fibre_length = 50,
+           max_fibre_length = 225, min_fibre_length = 20,
            max_background_fibres = 1, min_background_fibres = 0,
-           min_curvature_sigma = .00, max_curvature_sigma = .25,
+           min_curvature_sigma = .00, max_curvature_sigma = .05,
            min_curvature_limit = .025, max_curvature_limit = .15
        ):
 

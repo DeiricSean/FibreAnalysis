@@ -58,10 +58,10 @@ def store_polygons(directory, file,  inboundPolygons):
 
 
 def test_generation_is_deterministic(image_destination, mask_destination, label_destination):
-    test_seed = 120
+    test_seed = 125
 
     seed(test_seed)
-    data1, label1, count1 = training_set(5, Config())
+    data1, label1, count1 = training_set(12, Config())
 
     for i, (image, mask) in enumerate(zip(data1, label1), 1):
         current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')

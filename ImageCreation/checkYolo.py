@@ -10,8 +10,8 @@ label_images = os.path.join(current_directory, 'Data', 'synth', 'labels', '')
 
 
 
-image_path = os.path.join(sample_images, "image_2023-06-23_18-45-03-974057.png")
-label_path = os.path.join(label_images, "label_2023-06-23_18-45-03-974057.txt")
+image_path = os.path.join(sample_images, "image_2023-06-28_17-29-19-690310.png")
+label_path = os.path.join(label_images, "mask_2023-06-28_17-29-19-690310.txt")
 
 # Load the original image and YOLO format label
 image = cv2.imread(image_path)
@@ -22,6 +22,7 @@ with open(label_path, "r") as file:
      lines = file.readlines()
 
 # Process each line in the YOLO format label
+print(len(lines))
 for line in lines:
     line = line.strip().split()
   
