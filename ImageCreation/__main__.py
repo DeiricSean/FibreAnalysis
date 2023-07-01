@@ -1,5 +1,6 @@
 
 from generate_test import test_generation_is_deterministic
+#from syntheticfilesV2 import test_generation_is_deterministic
 
 if __name__ == '__main__':
     
