@@ -57,17 +57,22 @@ def store_polygons(directory, file,  inboundPolygons):
 
 
 
-def test_generation_is_deterministic(image_destination, mask_destination, label_destination):
-    test_seed = 125
+def test_generation_is_deterministic(image_destination, mask_destination, label_destination,background_images, numImages):
 
+    #test_seed = 125
     #seed(test_seed)
-    data1, label1, count1 = training_set(12, Config(r"C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\Backgrounds"))
+    
+    # Make images in groups of specified size 
+    image_groups = 10
+    
+    for i in range(math.ceil(numImages / image_groups)):
+        print(f'Iteration {i} creating set of {image_groups} images' )
+        data1, label1, count1 = training_set(10, Config(background_images))
 
-    for i, (image, mask) in enumerate(zip(data1, label1), 1):
-        current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
-        Image.fromarray(image.squeeze(), mode="L").save(f"{image_destination}image_{current_time}.png")
-        #Image.fromarray(image.squeeze(), mode="P").save(f"{image_destination}image_{current_time}.png")        
-        Image.fromarray(mask.squeeze(), mode="P").save(f"{mask_destination}mask_{current_time}.png")
-        store_polygons(label_destination, f"label_{current_time}.txt",  get_contours(mask))
+        for i, (image, mask) in enumerate(zip(data1, label1), 1):
+            current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+            Image.fromarray(image.squeeze(), mode="L").save(f"{image_destination}image_{current_time}.png")
+            Image.fromarray(mask.squeeze(), mode="P").save(f"{mask_destination}mask_{current_time}.png")
+            store_polygons(label_destination, f"label_{current_time}.txt",  get_contours(mask))
 
 
