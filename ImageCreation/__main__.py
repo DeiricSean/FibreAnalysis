@@ -13,7 +13,7 @@ if __name__ == '__main__':
     print(sample_masks)
     print(sample_images)
     
-    print("Starting Image Creation is this working?")
+    print("Starting Image Creation")
     
     NumImages = 15
     test_generation_is_deterministic(sample_images , sample_masks , sample_labels, background_images, NumImages)

@@ -5,13 +5,13 @@ import os
 import cv2
 
 current_directory = os.getcwd()
-sample_images = os.path.join(current_directory, 'Data', 'synth', 'images', '')
-label_images = os.path.join(current_directory, 'Data', 'synth', 'labels', '')
+sample_images = os.path.join(current_directory, 'Data', 'Prepared', 'images', '')
+label_images = os.path.join(current_directory, 'Data', 'Prepared', 'labels', '')
 
 
 
-image_path = os.path.join(sample_images, "image_2023-06-28_17-29-19-690310.png")
-label_path = os.path.join(label_images, "mask_2023-06-28_17-29-19-690310.txt")
+image_path = os.path.join(sample_images, "image_2023-07-01_15-28-06-089971_1.png")
+label_path = os.path.join(label_images, "label_2023-07-01_15-28-06-089971_1.txt")
 
 # Load the original image and YOLO format label
 image = cv2.imread(image_path)

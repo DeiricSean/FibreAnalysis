@@ -31,7 +31,6 @@ class imagePreparation:
         kernel = np.ones((2,2),np.uint8)
         # opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
         
-        
         imgCanny = cv2.Canny(gray,100,100)
         kernel = np.ones((5,5),np.uint8)
         self.imgEroded = cv2.dilate(imgCanny,kernel,iterations=1)
