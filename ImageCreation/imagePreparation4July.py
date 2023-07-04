@@ -7,16 +7,54 @@ from sklearn.cluster import KMeans
 import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-       
+import imutils       
+
+
+class ShapeDetector:
+# this class from  https://pyimagesearch.com/2016/02/08/opencv-shape-detection/    
+	def __init__(self):
+		pass
+	def detect(self, c):
+		# initialize the shape name and approximate the contour
+		shape = "unidentified"
+		peri = cv2.arcLength(c, True)
+		approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+
+		# if the shape is a triangle, it will have 3 vertices
+		if len(approx) == 3:
+			shape = "triangle"
+		# if the shape has 4 vertices, it is either a square or
+		# a rectangle
+		elif len(approx) == 4:
+			# compute the bounding box of the contour and use the
+			# bounding box to compute the aspect ratio
+			(x, y, w, h) = cv2.boundingRect(approx)
+			ar = w / float(h)
+			# a square will have an aspect ratio that is approximately
+			# equal to one, otherwise, the shape is a rectangle
+			shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
+		# if the shape is a pentagon, it will have 5 vertices
+		elif len(approx) == 5:
+			shape = "pentagon"
+		# otherwise, we assume the shape is a circle
+		else:
+			shape = "circle"
+		# return the name of the shape
+		return shape
+
         
 
 def imagePreparation(image, mask, numROI ):
     
     height, width = image.shape[:2]
     imageArea = height * width
+      
+    resized = imutils.resize(image, width=300)
+    
+    ratio = image.shape[0] / float(resized.shape[0])
 
 # # Apply Gaussian blur
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)
+    blurred = cv2.GaussianBlur(resized, (5, 5), 0)
 #  #   equalized = cv2.equalizeHist(image)
 
 #     # Convert the image to float32 data type
@@ -76,8 +114,9 @@ def imagePreparation(image, mask, numROI ):
 #######################################################################################################################
     # Remove lines from the image
     #result = cv2.bitwise_and(image, cv2.bitwise_not(mask))
-    contours1, hierarchy1 = cv2.findContours(edges, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    #contours1, hierarchy1 = cv2.findContours(edges, cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+    contours1, hierarchy1 = cv2.findContours(edges, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+    #contours1, hierarchy1 = cv2.findContours(edges, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
 
 # Filter contours based on area
     #area_threshold = 670000
@@ -86,16 +125,46 @@ def imagePreparation(image, mask, numROI ):
 
     IdentifiedContours = sorted(contours1, key=cv2.contourArea, reverse=True)
     
+    #cnts = imutils.contours(contours1)
+    
+    # sd = ShapeDetector()
+    # # loop over the contours
+    # for c in IdentifiedContours:
+    #     # compute the center of the contour, then detect the name of the
+    #     # shape using only the contour
+    #     M = cv2.moments(c)
+    #     cX = int((M["m10"] / M["m00"]) * ratio)
+    #     cY = int((M["m01"] / M["m00"]) * ratio)
+    #     shape = sd.detect(c)
+    #     # multiply the contour (x, y)-coordinates by the resize ratio,
+    #     # then draw the contours and the name of the shape on the image
+    #     c = c.astype("float")
+    #     c *= ratio
+    #     c = c.astype("int")
+    #     cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+    #     cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+    #         0.5, (255, 255, 255), 2)
+    #     # show the output image
+    #     cv2.imshow("Image", image)
+    #     cv2.waitKey(0)
+    
+    
+    
+    
     if len(IdentifiedContours) >= 2:
     # Get the areas of the first two contours
-    # The contour at point 0 is usually either the entire image or a subsection larger than the region of interest
+    # This is to identify whether the image has one or two main grid squares
         if abs(cv2.contourArea(IdentifiedContours[0]) / cv2.contourArea(IdentifiedContours[1])) < 2 :
             numROI = 2
         else:
             numROI = 1
 
-    #shape = dilated_edges.shape
-    #imageArea1 = height1 * width1
+    for x in range(numROI):
+        
+    #for contour in IdentifiedContours:
+        IdentifiedContours[x][:, 0, 0] = (IdentifiedContours[x][:, 0, 0] * ratio).astype(int)  # Scale the x-coordinates
+        IdentifiedContours[x][:, 0, 1] = (IdentifiedContours[x][:, 0, 1] * ratio).astype(int)  # Scale the y-coordinates
+
             
     print('image area', imageArea, abs(cv2.contourArea(IdentifiedContours[0])) / imageArea , 
                         abs(cv2.contourArea(IdentifiedContours[1]))/ imageArea,
@@ -108,7 +177,7 @@ def imagePreparation(image, mask, numROI ):
     cropped_images = []  # List to store cropped images
     cropped_masks = []   # List to store cropped masks
     
-    for i in range(numROI+1):
+    for i in range(numROI):
         # Compute the bounding rectangle for the contour
         x, y, w, h = cv2.boundingRect(IdentifiedContours[i])  # Largest contour 0 will be the full 
                                                                     # image so we ignore that one
@@ -120,6 +189,8 @@ def imagePreparation(image, mask, numROI ):
 
         # Display the image
         ax.imshow(image)
+        #ax.imshow(resized)
+        
         # Create a Rectangle patch
         rect = patches.Rectangle((x, y), w, h, linewidth=2, edgecolor='r', facecolor='blue')
 
