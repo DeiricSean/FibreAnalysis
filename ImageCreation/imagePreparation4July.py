@@ -10,40 +10,6 @@ import matplotlib.patches as patches
 import imutils       
 
 
-class ShapeDetector:
-# this class from  https://pyimagesearch.com/2016/02/08/opencv-shape-detection/    
-	def __init__(self):
-		pass
-	def detect(self, c):
-		# initialize the shape name and approximate the contour
-		shape = "unidentified"
-		peri = cv2.arcLength(c, True)
-		approx = cv2.approxPolyDP(c, 0.04 * peri, True)
-
-		# if the shape is a triangle, it will have 3 vertices
-		if len(approx) == 3:
-			shape = "triangle"
-		# if the shape has 4 vertices, it is either a square or
-		# a rectangle
-		elif len(approx) == 4:
-			# compute the bounding box of the contour and use the
-			# bounding box to compute the aspect ratio
-			(x, y, w, h) = cv2.boundingRect(approx)
-			ar = w / float(h)
-			# a square will have an aspect ratio that is approximately
-			# equal to one, otherwise, the shape is a rectangle
-			shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
-		# if the shape is a pentagon, it will have 5 vertices
-		elif len(approx) == 5:
-			shape = "pentagon"
-		# otherwise, we assume the shape is a circle
-		else:
-			shape = "circle"
-		# return the name of the shape
-		return shape
-
-        
-
 def imagePreparation(image, mask, numROI ):
     
     height, width = image.shape[:2]
@@ -55,101 +21,30 @@ def imagePreparation(image, mask, numROI ):
 
 # # Apply Gaussian blur
     blurred = cv2.GaussianBlur(resized, (5, 5), 0)
-#  #   equalized = cv2.equalizeHist(image)
-
-#     # Convert the image to float32 data type
-#  #   image_float = image.astype(np.float32)
-
-#     # Calculate the minimum and maximum pixel values
-#  #   min_val = np.min(image_float)
-#  #   max_val = np.max(image_float)
-
-#     # Normalize the image between 0 and 1
-#   #  normalized = (image_float - min_val) / (max_val - min_val)
-
-# # Display the image using plt
-#   #  plt.imshow(normalized)
-#   #  plt.axis('off')  # Turn off axis ticks and labels
-#   #  plt.show()
     
     _, thresh = cv2.threshold(blurred,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-    # Apply adaptive thresholding to create a binary image
-    #thresh = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, blockSize=15, C=2)
-
-#     # Canny edge detection
-# # Morphological operations (dilation)
-    kernel = np.ones((3, 3), np.uint8)
-    dilated_edges = cv2.dilate(thresh, kernel, iterations=1)
-    #dilated_edges = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-    #dilated_edges = cv2.morphologyEx(thresh, cv2.MORPH_GRADIENT, kernel)
 
 
-    edges = cv2.Canny(dilated_edges, 100, 200)
-
-
-
-
-
+# # Morphological operations 
 
     # Perform morphological operations to connect and thicken the lines
-#    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    # kernel = np.ones((3, 3), np.uint8)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 #    closed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
-
     # Smooth the lines using a median filter
  #   smoothed = cv2.medianBlur(closed, 3)
 
-    # Invert the image to get the filled lines
-    # filled_lines = cv2.bitwise_not(smoothed)
-    # plt.imshow(filled_lines)
-    # plt.axis('off')  # Turn off axis ticks and labels
-    # plt.show()
 
-
-    
-    # Apply Gaussian smoothing
-    # blurred = cv2.GaussianBlur(dilated_edges, (5, 5), 0)
-   
-
+    dilated_edges = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)  # MORPH_CLOSE is useful for closing small gaps
+    # Canny edge detection
+    edges = cv2.Canny(dilated_edges, 100, 200)
 
 #######################################################################################################################
     # Remove lines from the image
     #result = cv2.bitwise_and(image, cv2.bitwise_not(mask))
 
     contours1, hierarchy1 = cv2.findContours(edges, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-    #contours1, hierarchy1 = cv2.findContours(edges, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-
-# Filter contours based on area
-    #area_threshold = 670000
-    #filtered_contours = [contour for contour in contours1 if cv2.contourArea(contour) < area_threshold]
-
-
     IdentifiedContours = sorted(contours1, key=cv2.contourArea, reverse=True)
-    
-    #cnts = imutils.contours(contours1)
-    
-    # sd = ShapeDetector()
-    # # loop over the contours
-    # for c in IdentifiedContours:
-    #     # compute the center of the contour, then detect the name of the
-    #     # shape using only the contour
-    #     M = cv2.moments(c)
-    #     cX = int((M["m10"] / M["m00"]) * ratio)
-    #     cY = int((M["m01"] / M["m00"]) * ratio)
-    #     shape = sd.detect(c)
-    #     # multiply the contour (x, y)-coordinates by the resize ratio,
-    #     # then draw the contours and the name of the shape on the image
-    #     c = c.astype("float")
-    #     c *= ratio
-    #     c = c.astype("int")
-    #     cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-    #     cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-    #         0.5, (255, 255, 255), 2)
-    #     # show the output image
-    #     cv2.imshow("Image", image)
-    #     cv2.waitKey(0)
-    
-    
-    
     
     if len(IdentifiedContours) >= 2:
     # Get the areas of the first two contours
