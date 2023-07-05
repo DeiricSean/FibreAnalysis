@@ -14,6 +14,7 @@ import math
 import sys
 import time
 import torchvision.models.detection.mask_rcnn
+
 #import utils
 #from coco_eval import CocoEvaluator
 #from coco_utils import get_coco_api_from_dataset
@@ -1301,8 +1302,8 @@ class FibreDataset(torch.utils.data.Dataset):
         mask = Image.open(mask_path)
         # convert the Image into a numpy array
         mask = np.array(mask)
-        obj_ids = np.unique(mask)
-        print(obj_ids)
+        # obj_ids = np.unique(mask)
+        # print(obj_ids)
 
 
         # Create an empty list to store the binary masks
@@ -1496,10 +1497,10 @@ def main():
     
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=1e-5)  # https://towardsdatascience.com/train-mask-rcnn-net-for-object-detection-in-60-lines-of-code-9b6bbff292c3
     
-    # and a learning rate scheduler
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                   step_size=3,
-                                                   gamma=0.1)
+    # # and a learning rate scheduler
+    # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+    #                                                step_size=3,
+    #                                                gamma=0.1)
 
     # let's train it for 10 epochs
     num_epochs = 1
@@ -1509,7 +1510,7 @@ def main():
         train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
          # update the learning rate
         # optimizer.step() this is done in train_one_epoch
-        lr_scheduler.step()
+        #lr_scheduler.step() Let the optimiser 
          # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
 
