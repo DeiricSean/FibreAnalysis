@@ -1443,7 +1443,7 @@ def main():
     # dataset_test = torch.utils.data.Subset(dataset_test, indices[-5:])
     
     print(len(dataset))
-    print(len(dataset_test))
+
 
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
@@ -1458,7 +1458,8 @@ def main():
 
 
     # # Iterate over the data_loader
-    # for batch_data in data_loader:
+    for batch_data in data_loader:
+       print(batch_data)
     #     # Perform operations on each batch of data
     #     inputs, labels = batch_data
     #     # ... your code here ...
