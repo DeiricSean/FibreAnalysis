@@ -15,7 +15,7 @@ def imagePreparation(image, mask, numROI ):
     height, width = image.shape[:2]
     imageArea = height * width
       
-    resized = imutils.resize(image, width=300)
+    resized = imutils.resize(image, width=300)  # The height is also adjusted to preserve the aspect ratio
     
     ratio = image.shape[0] / float(resized.shape[0])
     # Apply Gaussian blur
