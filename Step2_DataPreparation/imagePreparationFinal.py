@@ -50,10 +50,11 @@ def imagePreparation(image, mask, numROI ):
     
     for i in range(numROI):
         # Compute the bounding rectangle for the contour
-        x, y, w, h = cv2.boundingRect(IdentifiedContours[i])  # Largest contour 0 will be the full 
-                                                                    # image so we ignore that one
-        cropped_images.append(image[y:y+h, x:x+w])  # Add cropped image to the list
-        cropped_masks.append(mask[y:y+h, x:x+w])    # Add cropped mask to the list
+        if cv2.contourArea(IdentifiedContours[i]) > 0:
+            x, y, w, h = cv2.boundingRect(IdentifiedContours[i])  # Largest contour 0 will be the full 
+                                                                        # image so we ignore that one
+            cropped_images.append(image[y:y+h, x:x+w])  # Add cropped image to the list
+            cropped_masks.append(mask[y:y+h, x:x+w])    # Add cropped mask to the list
     
     return cropped_images, cropped_masks
                                                                                    

@@ -16,16 +16,23 @@ import torchvision.transforms.functional as TF
 import random
 import imutils    
 from torch.utils.data._utils.collate import default_collate
+from torchvision.models.detection import maskrcnn_resnet50_fpn , MaskRCNN_ResNet50_FPN_Weights
+import matplotlib.pyplot as plt 
+
 # set the input height and width
-INPUT_HEIGHT = 128
-INPUT_WIDTH = 128
+INPUT_HEIGHT = 1064
+INPUT_WIDTH = 1064
 
 
 # initialize our data augmentation functions
-resize = transforms.Resize(size=(INPUT_HEIGHT, INPUT_WIDTH))
+ChangeType = transforms.ConvertImageDtype(torch.float32)
 
-trainTransforms = transforms.Compose([resize, transforms.ToTensor()])
-valTransforms = transforms.Compose([resize, transforms.ToTensor()])
+#trainTransforms = transforms.Compose([ChangeType, transforms.ToTensor()])
+#valTransforms = transforms.Compose([ChangeType, transforms.ToTensor()])
+
+trainTransforms = transforms.Compose([transforms.ToTensor()])
+valTransforms = transforms.Compose([transforms.ToTensor()])
+
 
 
 def get_transform(train):
@@ -99,10 +106,28 @@ class FibreDataset(torch.utils.data.Dataset):
         # with 0 being background
         mask = Image.open(mask_path)
 
+
+
+
+        
+ 
+
+
+
         # convert the Image into a numpy array
         mask = np.array(mask)
         # Create an empty list to store the binary masks
         masks = []
+        
+        
+        # ##### DOS
+        # # Draw the contours on the image array
+        # cv2.drawContours(mask, contours, -1, (0, 255, 0), 2)
+
+        # # Convert the image array back to PIL Image
+        # image_with_contours = Image.fromarray(mask)
+
+
         
         # Get the contours of the image - to find the grid polygons
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
@@ -121,6 +146,26 @@ class FibreDataset(torch.utils.data.Dataset):
             # Update the masks array with the contour mask
             masks[i] = contour_mask
 
+         #   image_with_contours = Image.fromarray(contour_mask)
+            
+
+
+            # Draw the contours on the image array
+        #cv2.drawContours(mask, contours, -1, (255, 255, 255), thickness=cv2.FILLED)
+
+        # Convert the image array back to PIL Image
+
+        
+        
+        
+        
+        # # Iterate over the contours and draw bounding boxes
+        # for contour in contours:
+        #     x, y, w, h = cv2.boundingRect(contour)
+        #     cv2.rectangle(mask, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        # Convert the image array back to PIL Image
+         #   image_with_boxes = Image.fromarray(mask)
 
     #     # Iterate over each contour and plot it
     #     for contour in contours:
@@ -133,48 +178,36 @@ class FibreDataset(torch.utils.data.Dataset):
     #         masks.append(contour_mask)       
     
         #num_objs = len(contours)
-        boxes = torch.zeros([num_objs,4], dtype=torch.float32)
-
+        #boxes = torch.zeros([num_objs,4], dtype=torch.float32)
+        boxes = [] 
         for i in range(num_objs):
             x,y,w,h = cv2.boundingRect(contours[i])
-            boxes[i] = torch.tensor([x, y, x+w, y+h])
-
-        masks = torch.as_tensor(masks, dtype=torch.uint8)
-        # Convert the masks list to a single NumPy array
-        #masks = np.array(masks)
-        
+           # boxes[i] = torch.tensor([x, y, x+w, y+h])
+            #boxes[i] = [x, y, x+w, y+h]
+            boxes.append([x, y, x+w, y+h])
+            
         # convert everything into a torch.Tensor
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+       # boxes = torch.as_tensor(boxes, dtype=torch.float32)
         # there is only one class
-        labels = torch.ones((num_objs,), dtype=torch.int64)
+        
+        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        labels = torch.as_tensor(torch.ones((num_objs,), dtype=torch.int64))
         masks = torch.as_tensor(masks, dtype=torch.uint8)
-
-        image_id = torch.tensor([idx])
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        # suppose all instances are not crowd
-        iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
+        #iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
 
         target = {}
         target["boxes"] = boxes
         target["labels"] = labels
         target["masks"] = masks
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+       # target["image_id"] = image_id
+       # target["area"] = area
+        #target["iscrowd"] = iscrowd
 
         
         #sample = {'Image': img , 'target': target}
         if self.transforms is not None:
         #     #sample = self.transforms(sample)
             img = self.transforms(img)
-         
-        print(type(img) )
-        print('split1')
-        print(img.size() )
-        print('split2')
-        print(type(target))  
-        print('end')
-        
 
         #data = [(img, target)]  # Create a list with a single tuple
         
@@ -202,22 +235,34 @@ def train_one_epoch(epoch_index, tb_writer):
     for i, data in enumerate(data_loader):
         # Every data instance is an input + label pair
         inputs, labels = data
+        images1 = list(image.to(device) for image in inputs)
+        targets1 = [{k: v.to(device) for k, v in t.items()} for t in labels]
 
-        # Zero your gradients for every batch!
+ 
+        loss_dict = model(images1, targets1)
+       # Zero your gradients for every batch!
+
+
+        losses = sum(loss for loss in loss_dict.values())
+        print(i,'loss:', losses.item())
         optimizer.zero_grad()
-
-        # Make predictions for this batch
-        outputs = model(inputs)
-
-        # Compute the loss and its gradients
-        loss = loss_fn(outputs, labels)
-        loss.backward()
-
-        # Adjust learning weights
+        losses.backward()
         optimizer.step()
 
+
+
+
+
+
+        # Compute the loss and its gradients
+        #loss = loss_fn(masks_pred, masks_target)
+        #loss.backward()
+
+        # Adjust learning weights
+        #optimizer.step()
+
         # Gather data and report
-        running_loss += loss.item()
+        running_loss += losses.item()
         if i % 1000 == 999:
             last_loss = running_loss / 1000 # loss per batch
             print('  batch {} loss: {}'.format(i + 1, last_loss))
@@ -237,15 +282,17 @@ def train_one_epoch(epoch_index, tb_writer):
 if __name__ == "__main__":
    
 
-    # # train on the GPU or on the CPU, if a GPU is not available
-    # device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    # train on the GPU or on the CPU, if a GPU is not available
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    # model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)  # load an instance segmentation model pre-trained pre-trained on COCO
-    # in_features = model.roi_heads.box_predictor.cls_score.in_features  # get number of input features for the classifier
-    # model.roi_heads.box_predictor = FastRCNNPredictor(in_features,num_classes=2)  # replace the pre-trained head with a new one
-    # model.to(device)# move model to the right device
+    #model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)  # load an instance segmentation model pre-trained pre-trained on COCO
+    model = maskrcnn_resnet50_fpn(weights=MaskRCNN_ResNet50_FPN_Weights.DEFAULT)
+        
+    in_features = model.roi_heads.box_predictor.cls_score.in_features  # get number of input features for the classifier
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features,num_classes=2)  # replace the pre-trained head with a new one
+    model.to(device)# move model to the right device
 
-    # loss_fn = torch.nn.CrossEntropyLoss()
+    loss_fn = torch.nn.CrossEntropyLoss()
     current_directory = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data'
 
     # our dataset has two classes only - background and person
@@ -270,9 +317,9 @@ if __name__ == "__main__":
         dataset_test, batch_size=1, shuffle=False, num_workers=2,
         collate_fn=collate_fn)
 
-    trainBatch = next(iter(data_loader))
+    #trainBatch = next(iter(data_loader))
 
-    print(trainBatch)
+    #print(trainBatch)
 
     # # define training and validation data loaders
     # data_loader = torch.utils.data.DataLoader(
@@ -287,8 +334,8 @@ if __name__ == "__main__":
 
 
     # # Iterate over the data_loader
-    for oneTry in data_loader:
-        print(oneTry)
+    # for oneTry in data_loader:
+    #     print(oneTry)
     #     # Perform operations on each batch of data
     #     inputs, labels = batch_data
     #     # ... your code here ...
@@ -311,7 +358,7 @@ if __name__ == "__main__":
     writer = SummaryWriter('runs/fashion_trainer_{}'.format(timestamp))
     epoch_number = 0
 
-    EPOCHS = 5
+    EPOCHS = 1  # Set number of epochs
 
     best_vloss = 1_000_000.
 
@@ -332,9 +379,24 @@ if __name__ == "__main__":
         with torch.no_grad():
             for i, vdata in enumerate(data_loader_test):
                 vinputs, vlabels = vdata
-                voutputs = model(vinputs)
-                vloss = loss_fn(voutputs, vlabels)
-                running_vloss += vloss
+                images1 = list(image.to(device) for image in vinputs)
+                targets1 = [{k: v.to(device) for k, v in t.items()} for t in vlabels]            
+                voutputs = model(images1,targets1)
+                #vloss = loss_fn(voutputs, vlabels)
+                #running_vloss += vloss
+                
+                
+                inputs, labels = vdata
+                images1 = list(image.to(device) for image in inputs)
+                targets1 = [{k: v.to(device) for k, v in t.items()} for t in labels]
+                voutputs = model(images1, )
+
+        # Zero your gradients for every batch!
+        optimizer.zero_grad()
+
+        loss_dict = model(images1, targets1)
+                
+                
 
         avg_vloss = running_vloss / (i + 1)
         print('LOSS train {} valid {}'.format(avg_loss, avg_vloss))
