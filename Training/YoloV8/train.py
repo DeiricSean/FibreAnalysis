@@ -1,6 +1,6 @@
 # https://github.com/computervisioneng/image-segmentation-yolov8
 
-from ultralytics import YOLO
+from ultralytics import YOLO  # to load and use YOLO V8
 import os
 
 model = YOLO('yolov8n-seg.pt')  # load a pretrained model (recommended for training)
