@@ -6,12 +6,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import os
-
+import torch.nn.functional as F
 from statistics import mean
 from tqdm import tqdm
 from torch.nn.functional import threshold, normalize
 from segment_anything import SamPredictor, sam_model_registry
 import torch
+from matplotlib.patches import Rectangle
 
 current_directory = os.getcwd()
 OutPreparedImages = os.path.join(current_directory, 'Data', 'Prepared', 'Train', 'images', '')
@@ -135,6 +136,21 @@ for k in bbox_coords.keys():
   transformed_data[k]['input_size'] = input_size
   transformed_data[k]['original_image_size'] = original_image_size
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ############################################################################################
 
 ############################################################################################
@@ -170,6 +186,59 @@ for epoch in range(num_epochs):
       prompt_boxes = bbox_coords[k]  # Multiple bounding boxes
       prompt_boxes1 = np.array(prompt_boxes)  # Convert to NumPy array
       boxes = transform.apply_boxes(prompt_boxes1, original_image_size)
+      
+######################################################################################
+
+######################################################################################
+# Convert the image tensor to a numpy array
+      image_np = input_image.squeeze(0).permute(1, 2, 0).cpu().numpy()
+
+      # Display the image using matplotlib
+      plt.imshow(image_np)
+      plt.axis('off')  # Optional: Turn off axis ticks and labels
+      # Draw bounding boxes on the image
+# Draw bounding boxes on the image
+      for box in boxes:
+          x, y, w, h = box
+          rect = Rectangle((x, y), w, h, edgecolor='r', linewidth=2, facecolor='none')
+          plt.gca().add_patch(rect)
+
+      
+      plt.show()
+
+
+      #   # Resize the input image tensor to match the desired size
+      # resized_input_image = F.interpolate(input_image.unsqueeze(0), size=input_size, mode='bilinear', align_corners=False)
+      # resized_input_image = resized_input_image.squeeze(0)
+
+      # # Convert the tensor back to numpy array for visualization
+      # resized_image = resized_input_image.cpu().numpy().transpose(1, 2, 0)
+
+      # # Draw bounding boxes on the resized image
+      # for box in boxes:
+      #     cv2.rectangle(resized_image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 0, 0), 2)
+
+      # # Display the resized image with the bounding boxes
+      # plt.imshow(resized_image)
+      # plt.show()
+      
+######################################################################################
+
+######################################################################################      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       
       boxes_torch = torch.as_tensor(boxes, dtype=torch.float, device=device)
       
