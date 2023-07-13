@@ -12,3 +12,4 @@ Training/segmentAnything/sam_vit_h_4b8939.pth
 Training/segmentAnything/1 manual count wool.jpg
 Training/segmentAnything/images/
 Step3_Train_Models/MaskRCNN/0.torch
+Training/segmentAnything/sam_vit_b_01ec64.pth
