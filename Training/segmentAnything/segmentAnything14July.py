@@ -13,6 +13,12 @@ from torch.nn.functional import threshold, normalize
 from segment_anything import SamPredictor, sam_model_registry
 import torch
 from matplotlib.patches import Rectangle
+from datetime import datetime
+from collections import defaultdict
+
+import torch
+
+from segment_anything.utils.transforms import ResizeLongestSide
 
 
 current_directory = os.getcwd()
@@ -60,9 +66,6 @@ bbox_coords = {}
 ground_truth_masks = {}
 for f in sorted(Path(OutPreparedMasks).iterdir())[:100]:
     k = f.stem[:]
-  #if k not in stamps_to_exclude:
-    #im = cv2.imread(f.as_posix())
-    #gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
     
     mask = cv2.imread(f.as_posix(), cv2.IMREAD_GRAYSCALE)
 
@@ -70,10 +73,7 @@ for f in sorted(Path(OutPreparedMasks).iterdir())[:100]:
 
     H, W = mask1.shape
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    
-    
-    #contours, hierarchy = cv2.findContours(gray, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[-2:]
+
     bounding_boxes = []
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
@@ -83,33 +83,11 @@ for f in sorted(Path(OutPreparedMasks).iterdir())[:100]:
     if len(bounding_boxes) > 0:
         bbox_coords[k] = bounding_boxes
 
-
-    #for k in bbox_coords.keys():
-    # gt_grayscale = cv2.imread(f'ground-truth-pixel/ground-truth-pixel/{k}-px.png', cv2.IMREAD_GRAYSCALE)
-    #ground_truth_masks[k] = [(gray == 0)] * len(bbox_coords[k])
     ground_truth_masks[k] = [(mask == 0)] * len(bbox_coords[k])
-
-
-   #name = 'image_2023-07-06_14-01-52-172651_1'
-   #maskname = 'mask_2023-07-06_14-01-52-172651_1'
 
     image_path = os.path.join(OutPreparedImages, f'image{k[4:]}.png')    
     image = cv2.imread(image_path)
 
-    #image = cv2.imread(f'{OutPreparedImages}{f.stem}.png')
-
-    plt.figure(figsize=(10,10))
-    plt.imshow(image)
-    #fig, ax = plt.subplots()
-    #show_boxes(bbox_coords[maskname], ax)
-    #show_boxes(bbox_coords[maskname], plt.gca())
-    show_boxes(bbox_coords[f.stem], plt.gca())
-
-
-#    show_masks(ground_truth_masks[maskname], plt.gca())
-    show_masks(ground_truth_masks[f.stem], plt.gca())    
-    plt.axis('off')
-    plt.show()
 
 model_type = 'vit_b'
 #checkpoint = 'sam_vit_b_01ec64.pth'
@@ -125,11 +103,7 @@ sam_model.train()
 ############################################################################################
 # Preprocess the images
 ############################################################################################
-from collections import defaultdict
 
-import torch
-
-from segment_anything.utils.transforms import ResizeLongestSide
 
 transformed_data = defaultdict(dict)
 for k in bbox_coords.keys():
@@ -157,25 +131,26 @@ for k in bbox_coords.keys():
 ############################################################################################
 
 # Set up the optimizer, hyperparameter tuning will improve performance here
-lr = 1e-4
+#lr = 1e-4
+lr = 1e-2
 wd = 0
 optimizer = torch.optim.Adam(sam_model.mask_decoder.parameters(), lr=lr, weight_decay=wd)
 
-loss_fn = torch.nn.MSELoss()
-# loss_fn = torch.nn.BCELoss()
-#keys = list(bbox_coords.keys())
+#loss_fn = torch.nn.MSELoss()
+loss_fn = torch.nn.BCELoss()
+
 keys = list(set(bbox_coords.keys()))   # Get unique list of keys 
 ############################################################################################
 
 ############################################################################################
 
-num_epochs = 2
+num_epochs = 5
 losses = []
 
 for epoch in range(num_epochs):
   epoch_losses = []
-  # Just train on the first 2 examples
-  for k in keys[:3]:
+  
+  for k in keys:
     input_image = transformed_data[k]['image'].to(device)
     input_size = transformed_data[k]['input_size']
     original_image_size = transformed_data[k]['original_image_size']
@@ -187,62 +162,6 @@ for epoch in range(num_epochs):
       prompt_boxes = bbox_coords[k]  # Multiple bounding boxes
       prompt_boxes1 = np.array(prompt_boxes)  # Convert to NumPy array
       boxes = transform.apply_boxes(prompt_boxes1, original_image_size)
-      
-######################################################################################
-
-######################################################################################
-# Convert the image tensor to a numpy array
-      image_np = input_image.squeeze(0).permute(1, 2, 0).cpu().numpy()
-
-      plt.figure(figsize=(10,10))
-      # Display the image using matplotlib
-      plt.imshow(image_np)
-      plt.axis('off')  # Optional: Turn off axis ticks and labels
-      # Draw bounding boxes on the image
-# Draw bounding boxes on the image
-
-      show_boxes(boxes, plt.gca())  
-    #   for box in boxes:
-    #       x, y, w, h = box
-    #       rect = Rectangle((x, y), w, h, edgecolor='r', linewidth=2, facecolor='none')
-    #       plt.gca().add_patch(rect)
-
-      
-      plt.show()
-
-
-      #   # Resize the input image tensor to match the desired size
-      # resized_input_image = F.interpolate(input_image.unsqueeze(0), size=input_size, mode='bilinear', align_corners=False)
-      # resized_input_image = resized_input_image.squeeze(0)
-
-      # # Convert the tensor back to numpy array for visualization
-      # resized_image = resized_input_image.cpu().numpy().transpose(1, 2, 0)
-
-      # # Draw bounding boxes on the resized image
-      # for box in boxes:
-      #     cv2.rectangle(resized_image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 0, 0), 2)
-
-      # # Display the resized image with the bounding boxes
-      # plt.imshow(resized_image)
-      # plt.show()
-      
-######################################################################################
-
-######################################################################################      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       
       boxes_torch = torch.as_tensor(boxes, dtype=torch.float, device=device)
       
@@ -268,7 +187,6 @@ for epoch in range(num_epochs):
     
     gt_masks_resized = []
     for gt_mask in ground_truth_masks[k]:  # Loop over multiple ground truth masks
-      #  gt_mask_resized = torch.from_numpy(np.resize(gt_mask, (1, 1, gt_mask.shape[0], gt_mask.shape[1]))).to(device)
         gt_mask_resized = torch.from_numpy(np.resize(gt_mask, (1, gt_mask.shape[0], gt_mask.shape[1]))).to(device)        
         
         gt_binary_mask = torch.as_tensor(gt_mask_resized > 0, dtype=torch.float32)
@@ -288,5 +206,22 @@ for epoch in range(num_epochs):
   losses.append(epoch_losses)
   print(f'EPOCH: {epoch}')
   print(f'Mean loss: {mean(epoch_losses)}')
+  
+  # Get the current timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+# Set the filename with the concatenated timestamp
+filename = f"SegmentAnythingModel_{timestamp}.pt"
+  
+torch.save(sam_model.state_dict(), filename)
+  
+mean_losses = [mean(x) for x in losses]
+mean_losses
+
+plt.plot(list(range(len(mean_losses))), mean_losses)
+plt.title('Mean epoch loss')
+plt.xlabel('Epoch Number')
+plt.ylabel('Loss')
+
+plt.show()
 
