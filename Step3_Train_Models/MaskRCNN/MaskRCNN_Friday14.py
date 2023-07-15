@@ -112,7 +112,23 @@ in_features = model.roi_heads.box_predictor.cls_score.in_features  # get number 
 model.roi_heads.box_predictor = FastRCNNPredictor(in_features,num_classes=2)  # replace the pre-trained head with a new one
 model.to(device)# move model to the right devic
 
-optimizer = torch.optim.AdamW(params=model.parameters(), lr=1e-5)
+# Define parameter groups
+backbone_params = []
+head_params = []
+for name, param in model.named_parameters():
+    if 'backbone' in name:
+        backbone_params.append(param)
+    else:
+        head_params.append(param)
+        
+# Create optimizers for different parameter groups
+optimizer = torch.optim.AdamW([
+    {'params': backbone_params, 'lr': 0},  # Set the learning rate to 0 to freeze the backbone
+    {'params': head_params}
+], lr=1e-5)        
+
+
+#optimizer = torch.optim.AdamW(params=model.parameters(), lr=1e-5)
 model.train()
 
 for i in range(10001):
