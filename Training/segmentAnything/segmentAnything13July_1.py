@@ -87,7 +87,7 @@ for f in sorted(Path(OutPreparedMasks).iterdir())[:100]:
     #for k in bbox_coords.keys():
     # gt_grayscale = cv2.imread(f'ground-truth-pixel/ground-truth-pixel/{k}-px.png', cv2.IMREAD_GRAYSCALE)
     #ground_truth_masks[k] = [(gray == 0)] * len(bbox_coords[k])
-    ground_truth_masks[k] = [(mask == 0)] * len(bbox_coords[k])
+    ground_truth_masks[k] = [~(mask == 0)] * len(bbox_coords[k])
 
 
    #name = 'image_2023-07-06_14-01-52-172651_1'

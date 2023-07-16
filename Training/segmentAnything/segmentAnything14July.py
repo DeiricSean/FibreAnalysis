@@ -86,7 +86,7 @@ for f in sorted(Path(OutPreparedMasks).iterdir())[:100]:
     if len(bounding_boxes) > 0:
         bbox_coords[k] = bounding_boxes
 
-    ground_truth_masks[k] = [(mask == 0)] * len(bbox_coords[k])
+    ground_truth_masks[k] = [~(mask == 0)] * len(bbox_coords[k])
 
     image_path = os.path.join(OutPreparedImages, f'image{k[4:]}.png')    
     image = cv2.imread(image_path)
@@ -147,7 +147,7 @@ keys = list(set(bbox_coords.keys()))   # Get unique list of keys
 
 ############################################################################################
 
-num_epochs = 5
+num_epochs = 10
 losses = []
 
 for epoch in range(num_epochs):
