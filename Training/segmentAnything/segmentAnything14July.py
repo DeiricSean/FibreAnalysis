@@ -1,6 +1,9 @@
 # from https://encord.com/blog/learn-how-to-fine-tune-the-segment-anything-model-sam/
 
 
+# Ultra lytics support SAM for inference only https://docs.ultralytics.com/models/sam/#available-models-and-supported-tasks
+
+
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt

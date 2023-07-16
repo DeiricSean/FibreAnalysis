@@ -17,3 +17,6 @@ script_directory = 'C:\\Users\\dezos\\Documents\\Fibres\\FibreAnalysis\\Training
 config_path = os.path.join(script_directory, 'config.yaml')
 print(config_path)
 model.train(data=config_path, epochs=1, imgsz=640)
+
+
+# example for testing etc at https://docs.ultralytics.com/usage/python/
