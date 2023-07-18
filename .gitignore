@@ -19,3 +19,5 @@ SegmentAnythingModel_20230714_120114.pt
 Step1_DataCreation/__pycache__/generate_test.cpython-39.pyc
 Step1_DataCreation/__pycache__/generate.cpython-39.pyc
 SegmentAnythingModel_20230716_122431.pt
+sam_vit_b_01ec64(1).pth
+SegmentAnythingModel_20230716_155525.pt
