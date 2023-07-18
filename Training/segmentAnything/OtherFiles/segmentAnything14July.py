@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from statistics import mean
 from tqdm import tqdm
 from torch.nn.functional import threshold, normalize
-from segment_anything import SamPredictor, sam_model_registry
+from segment_anything import SamPredictor, sam_model_registry, SamAutomaticMaskGenerator
 import torch
 from matplotlib.patches import Rectangle
 from datetime import datetime
@@ -29,6 +29,63 @@ OutPreparedImages = os.path.join(current_directory, 'Data', 'Prepared', 'Train',
 OutPreparedMasks = os.path.join(current_directory, 'Data', 'Prepared', 'Train', 'masks', '')
 
 # Helper functions provided in https://github.com/facebookresearch/segment-anything/blob/9e8f1309c94f1128a6e5c047a10fdcb02fc8d651/notebooks/predictor_example.ipynb
+
+#########################################################################################
+# Temp 
+#########################################################################################
+def show_anns(anns):
+    if len(anns) == 0:
+        return
+    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+
+    img = np.ones((sorted_anns[0]['segmentation'].shape[0], sorted_anns[0]['segmentation'].shape[1], 4))
+    img[:,:,3] = 0
+    for ann in sorted_anns:
+        m = ann['segmentation']
+        color_mask = np.concatenate([np.random.random(3), [0.35]])
+        img[m] = color_mask
+    ax.imshow(img)
+
+
+model_type = 'vit_b'
+#checkpoint = 'sam_vit_b_01ec64.pth'
+checkpoint = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Training\segmentAnything\sam_vit_b_01ec64.pth'
+#Training\segmentAnything\sam_vit_b_01ec64.pth
+   # train on the GPU or on the CPU, if a GPU is not available
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+sam_model = sam_model_registry[model_type](checkpoint=checkpoint)
+sam_model.to(device)
+#sam_model.train()
+
+image = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\Prepared\Train\images\image_2023-07-14_21-27-23-239174_1.png'
+image1 = cv2.imread(image) 
+mask_generator = SamAutomaticMaskGenerator(sam_model)
+masks = mask_generator.generate(image1)
+
+
+
+
+plt.figure(figsize=(20,20))
+plt.imshow(image1)
+show_anns(masks)
+plt.axis('off')
+plt.show() 
+
+
+
+
+# Set up predictors for both tuned and original models
+#from segment_anything import sam_model_registry, SamPredictor
+#predictor_original = SamAutomaticMaskGenerator(sam_model_orig)
+
+
+#########################################################################################
+
+#########################################################################################
+
 
 
 def show_masks(masks, ax, random_color=False):
@@ -140,7 +197,9 @@ wd = 0
 optimizer = torch.optim.Adam(sam_model.mask_decoder.parameters(), lr=lr, weight_decay=wd)
 
 #loss_fn = torch.nn.MSELoss()
-loss_fn = torch.nn.BCELoss()
+#loss_fn = torch.nn.BCELoss()
+loss_fn = torch.nn.BCEWithLogitsLoss()
+
 
 keys = list(set(bbox_coords.keys()))   # Get unique list of keys 
 ############################################################################################
