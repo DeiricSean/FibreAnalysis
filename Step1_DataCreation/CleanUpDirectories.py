@@ -26,11 +26,16 @@ for stageDirectory in ["Train", "Val", "Test"]:
     OutPreparedMasks = os.path.join(current_directory, 'Data', 'Prepared', stageDirectory, 'masks', '')
     OutPreparedLabels = os.path.join(current_directory, 'Data', 'Prepared', stageDirectory, 'labels', '')
 
+    OutYOLOPreparedImages = os.path.join(current_directory, 'Data', 'Prepared', 'YOLO', 'images',stageDirectory, '')
+    OutYOLOPreparedLabels = os.path.join(current_directory, 'Data', 'Prepared', 'YOLO', 'labels', stageDirectory, '')
+
+
     delete_files_in_directory(InRawImages)
     delete_files_in_directory(InRawMasks)
     delete_files_in_directory(OutPreparedImages)
     delete_files_in_directory(OutPreparedMasks)
     delete_files_in_directory(OutPreparedLabels)
-    
+    delete_files_in_directory(OutYOLOPreparedImages)    
+    delete_files_in_directory(OutYOLOPreparedLabels)    
 
 print("Files have been deleted")

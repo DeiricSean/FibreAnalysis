@@ -108,7 +108,8 @@ def processSynthImages(rawImages, rawMasks, preparedImages, preparedMasks, prepa
         # Prepare tarket filenames and locations for mask and image
         ImageFile = os.path.join(rawImages, filename)
         maskFilename = filename.replace('image', 'mask')
-        labelFilename = filename.replace('image', 'label')
+        #labelFilename = filename.replace('image', 'label')
+        labelFilename = filename # YOLO needs the labelname to match the image filename 
         
         MaskFile = os.path.join(rawMasks, maskFilename)
 
