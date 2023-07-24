@@ -98,43 +98,49 @@ def store_polygons(directory, file,  inboundPolygons):
     
 
 # Main processing 
-def processSynthImages(rawImages, rawMasks, preparedImages, preparedMasks, preparedLabels):
+# Main processing
+def processSynthImages(rawImages, rawMasks, preparedImages, preparedMasks, preparedYoloLabels, preparedYoloImages):
 
     # Get the list of files to process
     tempImageFilenames = os.listdir(rawImages)
     imageFilenames = [item for item in tempImageFilenames if os.path.isfile(os.path.join(rawImages, item))]
-    
+
     for filename in imageFilenames:
         # Prepare tarket filenames and locations for mask and image
         ImageFile = os.path.join(rawImages, filename)
         maskFilename = filename.replace('image', 'mask')
         #labelFilename = filename.replace('image', 'label')
-        labelFilename = filename # YOLO needs the labelname to match the image filename 
-        
+        labelFilename = filename # YOLO needs the label file name to match the image filename (except for the .txt extension)
+
         MaskFile = os.path.join(rawMasks, maskFilename)
 
         # read image
         img = cv2.imread(ImageFile, cv2.IMREAD_UNCHANGED)
         mask = cv2.imread(MaskFile, cv2.IMREAD_GRAYSCALE)
-        
-        # Crop image to show only the grid square/rectangles            
+
+        # Crop image to show only the grid square/rectangles
         croppedImgs, croppedMasks = imagePreparation(img, mask, 3)
-        
-        # Save the resulting images, masks and labels to the target directories        
+
+        # Save the resulting images, masks and labels to the target directories
         counter = 0
         for croppedImg, croppedMask in zip(croppedImgs, croppedMasks):
             counter += 1
-            
+
             imageName_without_extension, imageExtension = os.path.splitext(filename)
             maskname_without_extension, maskExtension = os.path.splitext(maskFilename)
             labelname_without_extension, _ = os.path.splitext(labelFilename)
-            
+
             targetImageFile = os.path.join(preparedImages, f"{imageName_without_extension}_{counter}{imageExtension}")
             targetMaskFile = os.path.join(preparedMasks, f"{maskname_without_extension}_{counter}{maskExtension}")
             
+            #YOLO (same as other image file)
+            targetYOLOFile = os.path.join(preparedImages, f"{imageName_without_extension}_{counter}{imageExtension}")
+
             cv2.imwrite(targetImageFile, croppedImg)  # Save the image to file
             cv2.imwrite(targetMaskFile, croppedMask)  # Save the mask to file
-            store_polygons(preparedLabels, f"{labelname_without_extension}_{counter}.txt",  get_contours(croppedMask)) 
+            
+            cv2.imwrite(targetYOLOFile, croppedImg)  # Save the image to file
+            store_polygons(preparedYoloLabels, f"{labelname_without_extension}_{counter}.txt",  get_contours(croppedMask))
 
 
 current_directory = os.getcwd()
@@ -150,6 +156,10 @@ for stageDirectory in ["Train", "Val", "Test"]:
     OutPreparedMasks = os.path.join(current_directory, 'Data', 'Prepared', stageDirectory, 'masks', '')
     OutPreparedLabels = os.path.join(current_directory, 'Data', 'Prepared', stageDirectory, 'labels', '')
 
-    processSynthImages(InRawImages, InRawMasks, OutPreparedImages, OutPreparedMasks, OutPreparedLabels)
+    #YOLO
+    OutPreparedYOLOImages = os.path.join(current_directory, 'Data', 'Prepared' 'YOLO', 'images', stageDirectory, '')    
+    OutPreparedYOLOLabels = os.path.join(current_directory, 'Data', 'Prepared', 'YOLO', 'labels', stageDirectory, '')
+    
+    processSynthImages(InRawImages, InRawMasks, OutPreparedImages, OutPreparedMasks, OutPreparedYOLOLabels, OutPreparedYOLOImages)
 
 print('Processing Complete')

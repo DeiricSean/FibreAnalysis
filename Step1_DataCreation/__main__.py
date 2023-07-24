@@ -7,7 +7,7 @@ if __name__ == '__main__':
     print('Current Directory', current_directory)
 
     # Create defined number of synthetic images
-    for stageDirectory, numberImages in [("Train", 20), ("Val", 10), ("Test", 10)]:
+    for stageDirectory, numberImages in [("Train", 1000), ("Val", 500), ("Test", 200)]:
 
         background_images = os.path.join(current_directory, 'Data', 'Backgrounds', '')
         sample_images = os.path.join(current_directory, 'Data', 'synth', stageDirectory,'images', '')
