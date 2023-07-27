@@ -35,6 +35,11 @@ from detectron2.structures import BoxMode
 from detectron2.engine import DefaultTrainer
 from detectron2.utils.visualizer import ColorMode
 import matplotlib.pyplot as plt
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+from lang_sam import LangSAM    #pip install -U git+https://github.com/luca-medeiros/lang-segment-anything.git
+from PIL import Image
+from lang_sam.utils import draw_image
+
 
 def GetYOLOResult_Contour(results):
     
@@ -147,6 +152,62 @@ def GetDetectronResult(results):
         
     return result_data  # get count of fibres and area covered
 
+
+def GetSAMresult(results):
+    
+    # Create a list to store dictionaries with area and count for each result
+    result_data = []
+
+    width = results[0]['crop_box'][2]          # Cropping is the same for all the image and so represents the size of the image
+    height = results[0]['crop_box'][3]
+    overall_mask = np.zeros((height, width), dtype=np.uint8)
+    areas = []
+    for i in range(1, len(results)):   # Ignore the first finding because that always seemsto be the entire shape
+         
+        results[i]['segmentation']
+        # Move the mask tensor to CPU if it's on a CUDA device
+        mask_np = results[i]['segmentation'].detach().cpu().numpy() if isinstance(results[i]['segmentation'], torch.Tensor) else results[i]['segmentation']
+        areas.append(results[i]['area'])
+            
+        # Combine the current mask with the overall mask using logical OR operation
+        #overall_mask = cv2.bitwise_or(overall_mask, mask_np)
+        overall_mask[mask_np] = 1
+    result_data.append({'area': sum(areas), 'count': len(results), 'overallMask': overall_mask})
+        
+    return result_data  # get count of fibres and area covered
+
+def show_anns(anns):
+    # for use when displaying segment anything mask 
+    if len(anns) == 0:
+        return
+    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+
+    img = np.ones((sorted_anns[0]['segmentation'].shape[0], sorted_anns[0]['segmentation'].shape[1], 4))
+    img[:,:,3] = 0
+    for ann in sorted_anns:
+        m = ann['segmentation']
+        color_mask = np.concatenate([np.random.random(3), [0.35]])
+        img[m] = color_mask
+    ax.imshow(img)
+
+def prep_mask_image(anns):
+    if len(anns) == 0:
+        return None
+    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
+    img = np.ones((sorted_anns[0]['segmentation'].shape[0], sorted_anns[0]['segmentation'].shape[1], 4))
+    img[:,:,3] = 0
+    for ann in sorted_anns:
+        m = ann['segmentation']
+        color_mask = np.concatenate([np.random.random(3), [0.35]])
+        img[m] = color_mask
+    img = (img * 255).astype(np.uint8)  # Convert to uint8 range (0-255)
+    return Image.fromarray(img)
+
+
+
+
 def calculate_iou(groundTruth, predicted):
     intersection = np.logical_and(groundTruth, predicted).sum()
     union = np.logical_or(groundTruth, predicted).sum()
@@ -156,6 +217,10 @@ def calculate_iou(groundTruth, predicted):
     return iou , dice_coefficient
 
 
+
+   # train on the GPU or on the CPU, if a GPU is not available - CPU will be very slow
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+print(device)
 # Source Data
 fibre_images = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\Prepared\Test\images'
 fibre_masks = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\Prepared\Test\masks'
@@ -174,15 +239,32 @@ YOLOmodel = YOLO(preTrainedYOLO)  # pretrained YOLOv8n model
 cfg = get_cfg()
 
 #cfg.MODEL.DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-cfg.MODEL.DEVICE = 'cpu'
+cfg.MODEL.DEVICE = device.type
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
 ###
 ####### Change this 
 cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Let training initialize from model zoo
-
 #cfg.MODEL.WEIGHTS = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Step1_DataCreation\Step4_Evaluate\Detectron2_Trained_Model.pth'
 
+##########################################################################################
+# Segment Anything 
+##########################################################################################
 
+sam_checkpoint = r"C:\Users\dezos\Documents\Fibres\FibreAnalysis\sam_vit_l_0b3195.pth"
+model_type = "vit_l"
+
+device = device
+
+sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+sam.to(device=device)
+
+sam_mask_generator = SamAutomaticMaskGenerator(sam)
+
+###########################################################################################
+# Language Segment anything 
+###########################################################################################
+
+samL = LangSAM()
 
 ##
 #cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
@@ -190,45 +272,85 @@ Detect2Predictor = DefaultPredictor(cfg)
 
 dataHolder = []
 # Create a new figure
-# fig, axes = plt.subplots(len(img_files), 5, figsize=(15, 15))
+fig, axes = plt.subplots(len(img_files), 6, figsize=(15, 15))
 
 
-for d in random.sample(img_files, 2):
+# Set individual titles for each column
+axes[0, 0].set_title("Image")
+axes[0, 1].set_title("Mask")
+axes[0, 2].set_title("YOLO")
+axes[0, 3].set_title("MaskRCNN")
+axes[0, 4].set_title("SAM")
+axes[0, 5].set_title("SAMtext")
+
+
+#for d in random.sample(img_files, 2):
+for i, d in enumerate(random.sample(img_files, 2)):    
     fullPath = os.path.join(fibre_images, d)
     mask_path = os.path.join(fibre_masks, f"mask{d[5:]}")  # Change filename from image_ to mask _ to retrieve mask
     print(fullPath)  # Print File name 
     print(mask_path)  # Print File name 
+    image = cv2.imread(fullPath)  # Load your input image   
     ground_truth_mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     
-    # ax = axes[i , 1]
-    # image = plt.imread(fullPath)
-    # ax.imshow(image)
-    # ax.axis('off')  # Turn off axis ticks and labels
-
-    # ax = axes[i , 2]
-    # image = plt.imread(mask_path)
-    # ax.imshow(image)
-    # ax.axis('off')  # Turn off axis ticks and labels
-    
+    ax = axes[i , 1]
+    ax.imshow(image)
+    ax.axis('off')
+    ax = axes[i , 2]
+    ax.imshow(ground_truth_mask)
+    ax.axis('off')
     
 #    results = YOLOmodel(fullPath)
-  
-    image = cv2.imread(fullPath)  # Load your input image   
+    # cv2.imshow("result", image)             #https://docs.ultralytics.com/modes/predict/#plotting-results
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()  
+
+    # YOLOresult = GetYOLOResult_Contour(YOLOmodel(fullPath))   # get area and count for YOLO    
    
-    cv2.imshow("result", image)             #https://docs.ultralytics.com/modes/predict/#plotting-results
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()  
+    yoloImage = YOLOmodel(fullPath)
+    res_plotted = yoloImage[0].plot()
+    res_plotted_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
+
+
+    ax = axes[i , 2]
+    ax.imshow(res_plotted_rgb)
+    ax.axis('off')
+    plt.show()
    
+    # result_11111 = Detect2Predictor(image)
    
-    YOLOresult = GetYOLOResult_Contour(YOLOmodel(fullPath))   # get area and count for YOLO    
-   
-    result_11111 = Detect2Predictor(image)
-   
-    DetectronResult = GetDetectronResult(Detect2Predictor(image))
+    # DetectronResult = GetDetectronResult(Detect2Predictor(image))
+
+    SAMmasks = sam_mask_generator.generate(image)
+
+    SAMresults = GetSAMresult(SAMmasks)
+    
+    
+    # Language
+    mask_image = prep_mask_image(SAMmasks)
+
+    grayscale_image = mask_image.convert("L")
+
+    # Create a new RGB image with grayscale values in all channels
+    rgb_bw_image = Image.new("RGB", grayscale_image.size)
+    rgb_bw_image.paste(grayscale_image)
+    text_prompt = "line"
+
+    SAMLmasks, SAMLboxes, SAMLlabels, SAMLlogits = samL.predict(rgb_bw_image, text_prompt, box_threshold=0.20, text_threshold=0.24)
+
+    image_array = np.array(image)
+    image101 = draw_image(image_array,  SAMLmasks,  SAMLboxes,  SAMLlabels)
+    plt.figure(figsize=(20,20))
+    plt.imshow(image101)
+
+    plt.axis('off')
+    plt.show()
+
 
    # Calculate IoU and Dice coefficient
-    iou_value, diceCoef= calculate_iou(ground_truth_mask, YOLOresult[-1]["overallMask"])
-    iou_value_detect, diceCoef_detect= calculate_iou(ground_truth_mask, DetectronResult[-1]["overallMask"])
+#    iou_value, diceCoef= calculate_iou(ground_truth_mask, YOLOresult[-1]["overallMask"])
+#    iou_value_detect, diceCoef_detect= calculate_iou(ground_truth_mask, DetectronResult[-1]["overallMask"])
+    iou_value_SAM, diceCoef_SAM= calculate_iou(ground_truth_mask, SAMresults[-1]["overallMask"])    
     
    # Prepare rows for dataframe later. See this link as to why to create a list first (much faster)  https://stackoverflow.com/questions/10715965/create-a-pandas-dataframe-by-appending-one-row-at-a-time
     dataHolder.append([d, iou_value, diceCoef, iou_value_detect, diceCoef_detect])
