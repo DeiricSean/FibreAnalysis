@@ -116,14 +116,10 @@ def GetDetectronResult(results):
     
     # Create a list to store dictionaries with area and count for each result
     result_data = []
-    
-    
-        # Access the predicted instances (bounding boxes, masks, etc.)
-    #instances = outputs["instances"]
 
     # Access the predicted masks
     predicted_masks = results["instances"].pred_masks
-    predicted_masks_np = predicted_masks.cpu().numpy()
+    predicted_masks_np = predicted_masks.cpu().numpy().astype(np.uint8)
     
     image_size = results["instances"].image_size
     height, width = image_size
@@ -176,6 +172,44 @@ def GetSAMresult(results):
         
     return result_data  # get count of fibres and area covered
 
+
+
+def getSAMLang_Result(result):
+    
+    result_data = []
+    mask_np = result.detach().cpu().numpy().astype(np.uint8) if isinstance(result, torch.Tensor) else result
+
+   # Access the predicted masks
+
+    image_size = mask_np.shape
+    
+    height = image_size[1] 
+    width = image_size[2]
+
+    overall_mask = np.zeros((height, width), dtype=np.uint8)
+    areas = []
+    for i, mask in enumerate(mask_np):
+        
+    # Calculate the contour of the mask using cv2.findContours (only external contours)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Initialize the total area for this mask
+        total_area = 0.0
+        
+        # Iterate through each contour and calculate its area
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            total_area += area
+
+        areas.append(total_area)
+
+        # Combine the current mask with the overall mask using logical OR operation
+        overall_mask = cv2.bitwise_or(overall_mask, mask)
+
+    result_data.append({'area': sum(areas), 'count': len(areas), 'overallMask': overall_mask})
+        
+    return result_data  # get count of fibres and area covered
+
 def show_anns(anns):
     # for use when displaying segment anything mask 
     if len(anns) == 0:
@@ -209,12 +243,19 @@ def prep_mask_image(anns):
 
 
 def calculate_iou(groundTruth, predicted):
+    
+
     intersection = np.logical_and(groundTruth, predicted).sum()
     union = np.logical_or(groundTruth, predicted).sum()
     iou = intersection / union
     
+    # Next am curious as to how much of the predicted objects are contained within the mask objects 
+    # so am checking how much of the intersenting is in the predicted. This is because I think the ground truth masks 
+    # might be a bit bigger than the fibres so it might score lower on IOU but still be an accurate prediction. 
+    int_predicted_intersection = intersection / predicted 
+    
     dice_coefficient = 2 * np.sum(intersection) / (np.sum(groundTruth) + np.sum(predicted))
-    return iou , dice_coefficient
+    return iou , dice_coefficient, int_predicted_intersection
 
 
 
@@ -243,8 +284,11 @@ cfg.MODEL.DEVICE = device.type
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
 ###
 ####### Change this 
-cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Let training initialize from model zoo
+#cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Let training initialize from model zoo
 #cfg.MODEL.WEIGHTS = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Step1_DataCreation\Step4_Evaluate\Detectron2_Trained_Model.pth'
+cfg.MODEL.WEIGHTS = r'C:\Users\dezos\Documents\Fibres\FibreAnalysis\Detectron2_Trained_Model.pth'
+cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1 # Model was trained on one class so need to specify that here 
+
 
 ##########################################################################################
 # Segment Anything 
@@ -272,18 +316,18 @@ Detect2Predictor = DefaultPredictor(cfg)
 
 dataHolder = []
 # Create a new figure
-fig, axes = plt.subplots(len(img_files), 6, figsize=(15, 15))
+# fig, axes = plt.subplots(len(img_files), 6, figsize=(15, 15))
 
 
-# Set individual titles for each column
-axes[0, 0].set_title("Image")
-axes[0, 1].set_title("Mask")
-axes[0, 2].set_title("YOLO")
-axes[0, 3].set_title("MaskRCNN")
-axes[0, 4].set_title("SAM")
-axes[0, 5].set_title("SAMtext")
+# # Set individual titles for each column
+# axes[0, 0].set_title("Image")
+# axes[0, 1].set_title("Mask")
+# axes[0, 2].set_title("YOLO")
+# axes[0, 3].set_title("MaskRCNN")
+# axes[0, 4].set_title("SAM")
+# axes[0, 5].set_title("SAMtext")
 
-
+counter = 0
 #for d in random.sample(img_files, 2):
 for i, d in enumerate(random.sample(img_files, 2)):    
     fullPath = os.path.join(fibre_images, d)
@@ -293,44 +337,26 @@ for i, d in enumerate(random.sample(img_files, 2)):
     image = cv2.imread(fullPath)  # Load your input image   
     ground_truth_mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     
-    ax = axes[i , 1]
-    ax.imshow(image)
-    ax.axis('off')
-    ax = axes[i , 2]
-    ax.imshow(ground_truth_mask)
-    ax.axis('off')
+    # ax = axes[i , 1]
+    # ax.imshow(image)
+    # ax.axis('off')
+    # ax = axes[i , 2]
+    # ax.imshow(ground_truth_mask)
+    # ax.axis('off')
     
 #    results = YOLOmodel(fullPath)
     # cv2.imshow("result", image)             #https://docs.ultralytics.com/modes/predict/#plotting-results
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()  
 
-    # YOLOresult = GetYOLOResult_Contour(YOLOmodel(fullPath))   # get area and count for YOLO    
-   
-    yoloImage = YOLOmodel(fullPath)
-    res_plotted = yoloImage[0].plot()
-    res_plotted_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
-
-
-    ax = axes[i , 2]
-    ax.imshow(res_plotted_rgb)
-    ax.axis('off')
-    plt.show()
-   
-    # result_11111 = Detect2Predictor(image)
-   
-    # DetectronResult = GetDetectronResult(Detect2Predictor(image))
-
+    YOLOresult = GetYOLOResult_Contour(YOLOmodel(fullPath))   # get area and count for YOLO    
+    DetectronResult = GetDetectronResult(Detect2Predictor(image))
     SAMmasks = sam_mask_generator.generate(image)
-
     SAMresults = GetSAMresult(SAMmasks)
-    
     
     # Language
     mask_image = prep_mask_image(SAMmasks)
-
     grayscale_image = mask_image.convert("L")
-
     # Create a new RGB image with grayscale values in all channels
     rgb_bw_image = Image.new("RGB", grayscale_image.size)
     rgb_bw_image.paste(grayscale_image)
@@ -338,25 +364,43 @@ for i, d in enumerate(random.sample(img_files, 2)):
 
     SAMLmasks, SAMLboxes, SAMLlabels, SAMLlogits = samL.predict(rgb_bw_image, text_prompt, box_threshold=0.20, text_threshold=0.24)
 
-    image_array = np.array(image)
-    image101 = draw_image(image_array,  SAMLmasks,  SAMLboxes,  SAMLlabels)
-    plt.figure(figsize=(20,20))
-    plt.imshow(image101)
-
-    plt.axis('off')
-    plt.show()
+    SAMlang_results = getSAMLang_Result(SAMLmasks)
 
 
-   # Calculate IoU and Dice coefficient
-#    iou_value, diceCoef= calculate_iou(ground_truth_mask, YOLOresult[-1]["overallMask"])
-#    iou_value_detect, diceCoef_detect= calculate_iou(ground_truth_mask, DetectronResult[-1]["overallMask"])
-    iou_value_SAM, diceCoef_SAM= calculate_iou(ground_truth_mask, SAMresults[-1]["overallMask"])    
+    #Calculate IoU and Dice coefficient
+    YOLO_iou_value, YOLO_diceCoef , YOLO_predIOU = calculate_iou(ground_truth_mask, YOLOresult[-1]["overallMask"])
+    Detect_iou_value, Detect_diceCoef, Detect_predIOU = calculate_iou(ground_truth_mask, DetectronResult[-1]["overallMask"])
+    SAM_iou_value, SAM_diceCoef, SAM_predIOU = calculate_iou(ground_truth_mask, SAMLmasks[-1]["overallMask"])    
+    SAMlang_iou_value, SAMlang_diceCoef, SAMlang_predIOU = calculate_iou(ground_truth_mask, SAMlang_results[-1]["overallMask"])        
     
-   # Prepare rows for dataframe later. See this link as to why to create a list first (much faster)  https://stackoverflow.com/questions/10715965/create-a-pandas-dataframe-by-appending-one-row-at-a-time
-    dataHolder.append([d, iou_value, diceCoef, iou_value_detect, diceCoef_detect])
-    
-    print("IoU:", iou_value)
-    print("Dice Coefficient:", diceCoef)
+        
+    #Prepare rows for dataframe later. See this link as to why to create a list first (much faster)  https://stackoverflow.com/questions/10715965/create-a-pandas-dataframe-by-appending-one-row-at-a-time
+    dataHolder.append([d, YOLO_iou_value, YOLO_diceCoef , YOLO_predIOU, Detect_iou_value, Detect_diceCoef, Detect_predIOU,
+                          SAM_iou_value, SAM_diceCoef, SAM_predIOU, SAMlang_iou_value, SAMlang_diceCoef, SAMlang_predIOU ])
+
+  # Increment the counter
+    counter += 1
+
+    # Check if the counter is a multiple of 10
+    if counter % 5 == 0:
+        # Create a DataFrame from the list
+        df = pd.DataFrame(dataHolder)
+
+        # Construct the filename with the counter
+        filename = f'IOUResults_{counter}.csv'
+
+        # Save the DataFrame to a CSV file
+        df.to_csv(filename, index=False)
+
+# After the loop ends, check if there are any remaining data in dataHolder
+# Save it to a CSV file if needed
+if dataHolder:
+    df = pd.DataFrame(dataHolder)
+    filename = f'IOUResults_{counter}.csv'
+    df.to_csv(filename, index=False)
+
+
+
 
     # YOLO 
 #Display the image with full markup 
