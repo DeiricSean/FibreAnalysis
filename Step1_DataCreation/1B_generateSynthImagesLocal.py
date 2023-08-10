@@ -1,3 +1,10 @@
+########################################################################################################
+# Adapted from https://github.com/hughfdjackson/fluorescent-fibre-counting.git
+#
+# This creates a set of synth images on local PC for the train, validation and test folders
+########################################################################################################
+
+
 import os
 from generate_test import test_generation_is_deterministic
 
@@ -13,8 +20,6 @@ if __name__ == '__main__':
         sample_images = os.path.join(current_directory, 'Data', 'synth', stageDirectory,'images', '')
         sample_masks = os.path.join(current_directory, 'Data', 'synth',  stageDirectory, 'masks', '')
         #sample_labels = os.path.join(current_directory, 'Data', 'synth',  stageDirectory, 'labels', '') # labels done in secondary processing
-        print(sample_masks)
-        print(sample_images)
         
         print("Starting Image Creation")
         

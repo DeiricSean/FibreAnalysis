@@ -1,4 +1,5 @@
 # Source https://github.com/hughfdjackson/fluorescent-fibre-counting.git
+# Called from generate_test.py
 
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from random import randint
@@ -299,19 +300,7 @@ class Background(Component):
         
         background_image = self.state['background_image'].resize(self.state['image_dims'])
         image.paste(background_image, (0, 0))
-        
-        # draw = ImageDraw.Draw(image, 'RGBA')
-        # draw.rectangle(self.state['bounding_box'], fill = self.state['color'])
 
-        # w, h = self.state['image_dims']
-        # noise = np.roll(_noise[:h, :w, :], self.state['noise_shift'], axis = (0, 1))
-        # noise *= self.state['noise_degree']
-
-        # array = np.asarray(image).astype('float32')
-        # array[:, :, :3] += noise
-        # array = np.clip(array, 0, array.max())
-
-        #return Image.fromarray(array.astype('uint8'))
         return image    
 
 class TapeLine(Component):
