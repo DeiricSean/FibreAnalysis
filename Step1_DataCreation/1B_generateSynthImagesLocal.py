@@ -1,8 +1,10 @@
-########################################################################################################
+#    Author  : Derek O'Sullivan
+#    Date    : 14/08/23
+
+#    Purpose : This creates a set of synth images on local PC for the train, validation and test folders
+
 # Adapted from https://github.com/hughfdjackson/fluorescent-fibre-counting.git
-#
-# This creates a set of synth images on local PC for the train, validation and test folders
-########################################################################################################
+
 
 
 import os

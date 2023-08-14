@@ -1,5 +1,9 @@
-# Adapted from https://github.com/hughfdjackson/fluorescent-fibre-counting.git
-# Called by generateSynthImagesLocal.py 
+#    Author  : Derek O'Sullivan
+#    Date    : 14/08/23
+
+#    Purpose : Called by generateSynthImagesLocal.py 
+#    Adapted from https://github.com/hughfdjackson/fluorescent-fibre-counting.git
+
 
 import os
 from datetime import datetime

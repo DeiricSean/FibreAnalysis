@@ -1,0 +1,6 @@
+path: C:\Users\dezos\Documents\Fibres\FibreAnalysis\Data\Prepared\YOLO
+train: images\train 
+val: images\val  
+
+nc: 1
+names: ['fibre']

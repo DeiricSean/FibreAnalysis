@@ -1,7 +1,9 @@
+#    Author  : Derek O'Sullivan
+#    Date    : 14/08/23
+
+#    Purpose : Preparation for synthetic file creation - clear all existing files from relevant directories on local system
+
 import os
-
-### Preparation for synthetic file creation - clear all existing files from relevant directories on local system
-
 
 def delete_files_in_directory(directory):
     # Get a list of all files in the directory

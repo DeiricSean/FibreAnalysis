@@ -1,5 +1,9 @@
-# Source https://github.com/hughfdjackson/fluorescent-fibre-counting.git
-# Called from generate_test.py
+#    Author  : Derek O'Sullivan
+#    Date    : 14/08/23
+#    Purpose : Called from generate_test.py
+
+#    Adapted from https://github.com/hughfdjackson/fluorescent-fibre-counting.git
+
 
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from random import randint

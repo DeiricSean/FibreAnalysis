@@ -1,0 +1,6 @@
+path: /content/drive/MyDrive/Colab Notebooks/FibreAnalysis/Data/Prepared/Set
+train: images/train 
+val: images/val  
+
+nc: 1
+names: ['fibre']
